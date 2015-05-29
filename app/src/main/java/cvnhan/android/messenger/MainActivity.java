@@ -5,6 +5,8 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.StrictMode;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -16,7 +18,9 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 
 import butterknife.ButterKnife;
@@ -35,6 +39,8 @@ public class MainActivity extends Activity {
     TextView tvContent;
     @InjectView(R.id.etInput)
     EditText etInput;
+    ContactAdapter ca;
+    RecyclerView recList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,9 +49,33 @@ public class MainActivity extends Activity {
                 .permitAll().build();
         StrictMode.setThreadPolicy(policy);
         setContentView(R.layout.activity_main);
+        recList = (RecyclerView) findViewById(R.id.cardList);
+        recList.setHasFixedSize(true);
+        LinearLayoutManager llm = new LinearLayoutManager(this);
+        llm.setOrientation(LinearLayoutManager.VERTICAL);
+        recList.setLayoutManager(llm);
+
+        ca = new ContactAdapter(createList(10));
+        recList.setAdapter(ca);
         ButterKnife.inject(this);
         connectServer();
 
+    }
+
+    private List<ContactInfo> createList(int size) {
+
+        List<ContactInfo> result = new ArrayList<ContactInfo>();
+        for (int i=1; i <= size; i++) {
+            ContactInfo ci = new ContactInfo();
+            ci.name = ContactInfo.NAME_PREFIX + i;
+            ci.surname = ContactInfo.SURNAME_PREFIX + i;
+            ci.email = ContactInfo.EMAIL_PREFIX + i + "@test.com";
+
+            result.add(ci);
+
+        }
+
+        return result;
     }
 
     private void connectServer() {
@@ -67,6 +97,8 @@ public class MainActivity extends Activity {
                 Bundle bundle = msg.getData();
                 String string = bundle.getString("myKey");
                 tvContent.setText(string);
+                ca.addContact(string);
+                recList.scrollToPosition(ca.getItemCount()-1);
             }
         };
         // Create and start Sender thread
