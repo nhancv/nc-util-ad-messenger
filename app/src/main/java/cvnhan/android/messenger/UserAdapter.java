@@ -30,9 +30,7 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder
         this.userInfos = userInfos;
     }
 
-
     public void addMessage(String time, String msg) {
-
         String user = UserInfo.getAuthor(msg);
         int indeximg = msg.indexOf("#img-");
         if (indeximg != -1) {
@@ -58,6 +56,7 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder
         UserInfo ui = userInfos.get(i);
         userViewHolder.tvStatus.setVisibility(View.GONE);
         userViewHolder.merchantImgContent.setVisibility(View.GONE);
+        userViewHolder.userImgContent.setVisibility(View.GONE);
         userViewHolder.tvTime.setText(ui.time);
         if (ui.name.equals("merchant")) {
             userViewHolder.userView.setVisibility(View.GONE);
@@ -74,7 +73,7 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder
             userViewHolder.userMessage.setText(ui.message);
             if (ui.img != -1) {
                 userViewHolder.userImgContent.setImageResource(MainActivity.imgResId.get(ui.img));
-                userViewHolder.merchantImgContent.setVisibility(View.VISIBLE);
+                userViewHolder.userImgContent.setVisibility(View.VISIBLE);
             }
         } else {
             userViewHolder.userView.setVisibility(View.GONE);
