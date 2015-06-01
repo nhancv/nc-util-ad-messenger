@@ -4,10 +4,15 @@ package cvnhan.android.messenger;
  * Created by cvnhan on 29-May-15.
  */
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.content.Context;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -20,6 +25,7 @@ import butterknife.InjectView;
 
 public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder> {
 
+    private Context context;
     private List<UserInfo> userInfos;
 
     public UserAdapter() {
@@ -43,7 +49,7 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder
             UserInfo ui = new UserInfo(time, user, message);
             userInfos.add(ui);
         }
-        this.notifyDataSetChanged();
+        this.notifyItemInserted(getItemCount() - 1);
     }
 
     @Override
@@ -52,7 +58,10 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder
     }
 
     @Override
-    public void onBindViewHolder(UserViewHolder userViewHolder, int i) {
+    public void onBindViewHolder(final UserViewHolder userViewHolder, final int i) {
+        Animation anim_left= AnimationUtils.loadAnimation(context, R.anim.msg_left);
+        Animation anim_right= AnimationUtils.loadAnimation(context, R.anim.msg_right);
+
         UserInfo ui = userInfos.get(i);
         userViewHolder.tvStatus.setVisibility(View.GONE);
         userViewHolder.merchantImgContent.setVisibility(View.GONE);
@@ -66,14 +75,41 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder
                 userViewHolder.merchantImgContent.setImageResource(MainActivity.imgResId.get(ui.img));
                 userViewHolder.merchantImgContent.setVisibility(View.VISIBLE);
             }
+            if(i==getItemCount()-1) {
+                userViewHolder.merchantView.setAnimation(anim_left);
+                userViewHolder.merchantView.animate().setListener(new AnimatorListenerAdapter() {
+                    @Override
+                    public void onAnimationStart(Animator animation) {
+                        userViewHolder.merchantView.setAlpha(0f);
+                    }
 
+                    @Override
+                    public void onAnimationEnd(Animator animation) {
+                        userViewHolder.merchantView.setAlpha(1f);
+                    }
+                }).start();
+            }
         } else if (ui.name.equals("user")) {
-            userViewHolder.userView.setVisibility(View.VISIBLE);
             userViewHolder.merchantView.setVisibility(View.GONE);
+            userViewHolder.userView.setVisibility(View.VISIBLE);
             userViewHolder.userMessage.setText(ui.message);
             if (ui.img != -1) {
                 userViewHolder.userImgContent.setImageResource(MainActivity.imgResId.get(ui.img));
                 userViewHolder.userImgContent.setVisibility(View.VISIBLE);
+            }
+            if(i==getItemCount()-1) {
+                userViewHolder.userView.setAnimation(anim_right);
+                userViewHolder.userView.animate().setListener(new AnimatorListenerAdapter() {
+                    @Override
+                    public void onAnimationStart(Animator animation) {
+                        userViewHolder.userView.setAlpha(0f);
+                    }
+
+                    @Override
+                    public void onAnimationEnd(Animator animation) {
+                        userViewHolder.userView.setAlpha(1f);
+                    }
+                }).start();
             }
         } else {
             userViewHolder.userView.setVisibility(View.GONE);
@@ -85,8 +121,9 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder
 
     @Override
     public UserViewHolder onCreateViewHolder(ViewGroup viewGroup, int i) {
+        context=viewGroup.getContext();
         View itemView = LayoutInflater.
-                from(viewGroup.getContext()).
+                from(context).
                 inflate(R.layout.userinfo_layout, viewGroup, false);
 
         return new UserViewHolder(itemView);

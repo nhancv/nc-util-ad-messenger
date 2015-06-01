@@ -33,9 +33,9 @@ import butterknife.OnClick;
 
 public class MainActivity extends Activity {
     public static final String TAG = "MESSENGER";
-    public static final String SERVER_HOSTNAME = "192.168.1.28";
+    public static final String SERVER_HOSTNAME = "192.168.0.102";
     public static final int SERVER_PORT = 2222;
-
+    public static String author=null;
     BufferedReader in = null;
     PrintWriter out = null;
     Handler handler;
@@ -67,6 +67,7 @@ public class MainActivity extends Activity {
 
         userAdapter = new UserAdapter(createList(1));
         recList.setAdapter(userAdapter);
+        recList.getItemAnimator().setSupportsChangeAnimations(true);
         ButterKnife.inject(this);
 
         double density = getResources().getDisplayMetrics().density;
@@ -85,7 +86,7 @@ public class MainActivity extends Activity {
             imageButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    if (out != null) {
+                    if (out != null && author!=null) {
                         String message = etInput.getText().toString();
                         message+="#img-"+imageButton.getTag()+"/#";
                         out.println(message);
@@ -146,6 +147,7 @@ public class MainActivity extends Activity {
     public void sendMsg() {
         if (out != null) {
             String message = etInput.getText().toString();
+            if(author==null) author=message;
             out.println(message);
             etInput.selectAll();
         }
