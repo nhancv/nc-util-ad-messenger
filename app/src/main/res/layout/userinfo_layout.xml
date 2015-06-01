@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/card_view"
+    android:orientation="vertical"
+    android:layout_gravity="center_horizontal"
+    android:gravity="center_horizontal"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_margin="5dp">
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_gravity="center_horizontal"
+        android:gravity="center_horizontal">
+
+        <TextView
+            android:id="@+id/tvTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center" />
+
+        <LinearLayout
+            android:id="@+id/merchantView"
+            android:layout_gravity="left"
+            android:gravity="left"
+            android:layout_width="400dp"
+            android:layout_height="match_parent"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:id="@+id/merchantImgIcon"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:src="@drawable/testleft" />
+
+            <LinearLayout
+                android:id="@+id/merchantContentView"
+                android:layout_width="250dp"
+                android:layout_height="wrap_content"
+                android:background="@drawable/chatnew"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/merchantMessage"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="test" />
+
+                <ImageView
+                    android:id="@+id/merchantImgContent"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:scaleType="centerCrop" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tvStatus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center" />
+
+        <LinearLayout
+            android:id="@+id/userView"
+            android:layout_width="400dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="right"
+            android:gravity="right"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:id="@+id/userContentView"
+                android:layout_width="250dp"
+                android:layout_height="wrap_content"
+                android:background="@drawable/chatuser"
+                android:orientation="vertical">
+
+                <TextView
+                    android:paddingLeft="5dp"
+                    android:id="@+id/userMessage"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="test" />
+
+                <ImageView
+                    android:id="@+id/userImgContent"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:scaleType="centerCrop" />
+
+            </LinearLayout>
+
+            <ImageView
+                android:id="@+id/userImgIcon"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_gravity="bottom"
+                android:src="@drawable/testleft" />
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>
