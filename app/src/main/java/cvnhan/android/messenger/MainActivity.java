@@ -1,6 +1,7 @@
 package cvnhan.android.messenger;
 
 import android.app.Activity;
+import android.content.res.TypedArray;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -8,8 +9,12 @@ import android.os.StrictMode;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.View;
 import android.view.WindowManager;
 import android.widget.EditText;
+import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import java.io.BufferedReader;
@@ -30,7 +35,7 @@ public class MainActivity extends Activity {
     public static final String TAG = "MESSENGER";
     public static final String SERVER_HOSTNAME = "192.168.1.28";
     public static final int SERVER_PORT = 2222;
-    public static String User = null;
+
     BufferedReader in = null;
     PrintWriter out = null;
     Handler handler;
@@ -40,6 +45,12 @@ public class MainActivity extends Activity {
     EditText etInput;
     UserAdapter userAdapter;
     RecyclerView recList;
+
+    @InjectView(R.id.lvPic)
+    LinearLayout lvPic;
+    private TypedArray pictureLists;
+    public static ArrayList<Integer> imgResId=new ArrayList<>();
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,18 +65,47 @@ public class MainActivity extends Activity {
         llm.setOrientation(LinearLayoutManager.VERTICAL);
         recList.setLayoutManager(llm);
 
-        userAdapter = new UserAdapter(createList(2));
+        userAdapter = new UserAdapter(createList(1));
         recList.setAdapter(userAdapter);
         ButterKnife.inject(this);
-        connectServer();
 
+        double density = getResources().getDisplayMetrics().density;
+        pictureLists = getResources()
+                .obtainTypedArray(R.array.picture);
+        for (int i = 0; i < pictureLists.length(); i++) {
+            imgResId.add(pictureLists.getResourceId(i, -1));
+            final ImageButton imageButton = new ImageButton(this);
+            imageButton.setImageResource(pictureLists.getResourceId(i, -1));
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                    (int) (150 * density), (int) (100 * density));
+            params.setMargins(5, 5, 5, 5);
+            imageButton.setLayoutParams(params);
+            imageButton.setScaleType(ImageView.ScaleType.FIT_XY);
+            imageButton.setTag(i);
+            imageButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    if (out != null) {
+                        String message = etInput.getText().toString();
+                        message+="#img-"+imageButton.getTag()+"/#";
+                        out.println(message);
+                        etInput.selectAll();
+                    }
+                }
+            });
+            lvPic.addView(imageButton);
+        }
+
+        pictureLists.recycle();
+
+        connectServer();
     }
 
     private List<UserInfo> createList(int size) {
 
         List<UserInfo> result = new ArrayList<UserInfo>();
         for (int i = 1; i <= size; i++) {
-            UserInfo ci = new UserInfo(UserInfo.getTimeSystem(),((i % 2) == 0) ? "user" : "merchant", "hello");
+            UserInfo ci = new UserInfo(UserInfo.getTimeSystem(), ((i % 2) == 0) ? "user" : "merchant", "hello");
             result.add(ci);
         }
         return result;
@@ -136,7 +176,6 @@ class Sender extends Thread {
             // Read messages from the server and print them
             String message;
             while ((message = in.readLine()) != null) {
-                if (MainActivity.User == null) MainActivity.User = message;
                 Message msg = handler.obtainMessage();
                 Bundle bundle = new Bundle();
                 bundle.putString("msg", message);

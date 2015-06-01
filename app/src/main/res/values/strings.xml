@@ -3,4 +3,10 @@
 
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
+
+    <array name="picture">
+        <item >@drawable/test</item>
+        <item >@drawable/test2</item>
+        <item >@drawable/test3</item>
+    </array>
 </resources>
