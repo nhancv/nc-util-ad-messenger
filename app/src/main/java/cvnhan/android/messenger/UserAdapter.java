@@ -7,7 +7,10 @@ package cvnhan.android.messenger;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.content.Context;
+import android.graphics.drawable.Drawable;
 import android.support.v7.widget.RecyclerView;
+import android.text.Html;
+import android.text.method.LinkMovementMethod;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -29,7 +32,7 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder
     private List<UserInfo> userInfos;
 
     public UserAdapter() {
-        userInfos = new ArrayList<>();
+        this.userInfos = new ArrayList<>();
     }
 
     public UserAdapter(List<UserInfo> userInfos) {
@@ -59,8 +62,8 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder
 
     @Override
     public void onBindViewHolder(final UserViewHolder userViewHolder, final int i) {
-        Animation anim_left= AnimationUtils.loadAnimation(context, R.anim.msg_left);
-        Animation anim_right= AnimationUtils.loadAnimation(context, R.anim.msg_right);
+        Animation anim_left = AnimationUtils.loadAnimation(context, R.anim.msg_left);
+        Animation anim_right = AnimationUtils.loadAnimation(context, R.anim.msg_right);
 
         UserInfo ui = userInfos.get(i);
         userViewHolder.tvStatus.setVisibility(View.GONE);
@@ -70,12 +73,15 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder
         if (ui.name.equals("merchant")) {
             userViewHolder.userView.setVisibility(View.GONE);
             userViewHolder.merchantView.setVisibility(View.VISIBLE);
-            userViewHolder.merchantMessage.setText(ui.message);
-            if (ui.img != -1){
+            //show html format
+            userViewHolder.merchantMessage.setText(Html.fromHtml(ui.message, new ImageGetter(), null));
+            userViewHolder.merchantMessage.setMovementMethod(LinkMovementMethod.getInstance());
+
+            if (ui.img != -1) {
                 userViewHolder.merchantImgContent.setImageResource(MainActivity.imgResId.get(ui.img));
                 userViewHolder.merchantImgContent.setVisibility(View.VISIBLE);
             }
-            if(i==getItemCount()-1) {
+            if (i == getItemCount() - 1) {
                 userViewHolder.merchantView.setAnimation(anim_left);
                 userViewHolder.merchantView.animate().setListener(new AnimatorListenerAdapter() {
                     @Override
@@ -92,12 +98,15 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder
         } else if (ui.name.equals("user")) {
             userViewHolder.merchantView.setVisibility(View.GONE);
             userViewHolder.userView.setVisibility(View.VISIBLE);
-            userViewHolder.userMessage.setText(ui.message);
+            //show html format
+            userViewHolder.userMessage.setText(Html.fromHtml(ui.message, new ImageGetter(), null));
+            userViewHolder.userMessage.setMovementMethod(LinkMovementMethod.getInstance());
+
             if (ui.img != -1) {
                 userViewHolder.userImgContent.setImageResource(MainActivity.imgResId.get(ui.img));
                 userViewHolder.userImgContent.setVisibility(View.VISIBLE);
             }
-            if(i==getItemCount()-1) {
+            if (i == getItemCount() - 1) {
                 userViewHolder.userView.setAnimation(anim_right);
                 userViewHolder.userView.animate().setListener(new AnimatorListenerAdapter() {
                     @Override
@@ -121,7 +130,7 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder
 
     @Override
     public UserViewHolder onCreateViewHolder(ViewGroup viewGroup, int i) {
-        context=viewGroup.getContext();
+        context = viewGroup.getContext();
         View itemView = LayoutInflater.
                 from(context).
                 inflate(R.layout.userinfo_layout, viewGroup, false);
@@ -166,5 +175,29 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder
             super(v);
             ButterKnife.inject(this, v);
         }
+    }
+
+    private class ImageGetter implements Html.ImageGetter {
+
+        public Drawable getDrawable(String source) {
+            int id;
+
+            id = context.getResources().getIdentifier(source, "drawable", context.getPackageName());
+
+            if (id == 0) {
+                // the drawable resource wasn't found in our package, maybe it is a stock android drawable?
+                id = context.getResources().getIdentifier(source, "drawable", "android");
+            }
+
+            if (id == 0) {
+                // prevent a crash if the resource still can't be found
+                return null;
+            } else {
+                Drawable d = context.getResources().getDrawable(id);
+                d.setBounds(0, 0, d.getIntrinsicWidth(), d.getIntrinsicHeight());
+                return d;
+            }
+        }
+
     }
 }

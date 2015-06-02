@@ -37,7 +37,7 @@ public class UserInfo {
 
     public static String getAuthor(String msg) {
         if (msg.startsWith("<")) {
-            int index = msg.lastIndexOf(">");
+            int index = msg.indexOf(">",1);
             return msg.substring(1, index);
     }
     return "server";
@@ -45,7 +45,7 @@ public class UserInfo {
 
     public static String getMessage(String msg) {
         if (msg.startsWith("<")) {
-            int index = msg.lastIndexOf(">");
+            int index = msg.indexOf(">",1);
             return msg.substring(index + 2);
         }
         return msg;
@@ -56,5 +56,6 @@ public class UserInfo {
                 new SimpleDateFormat("dd/mm/yyyy - HH:mm a", Locale.US);
         return dateformat.format(new Date());
     }
+
 
 }

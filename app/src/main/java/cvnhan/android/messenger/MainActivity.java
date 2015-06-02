@@ -1,7 +1,11 @@
 package cvnhan.android.messenger;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.res.TypedArray;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -33,11 +37,13 @@ import butterknife.OnClick;
 
 public class MainActivity extends Activity {
     public static final String TAG = "MESSENGER";
-    public static final String SERVER_HOSTNAME = "192.168.0.102";
+    public static final String SERVER_HOSTNAME = "192.168.1.28";
     public static final int SERVER_PORT = 2222;
-    public static String author=null;
+    public static String author = null;
     BufferedReader in = null;
     PrintWriter out = null;
+    Socket clientSocket = null;
+    ConnectAsyncTask cn = null;
     Handler handler;
     @InjectView(R.id.tvContent)
     TextView tvContent;
@@ -49,7 +55,7 @@ public class MainActivity extends Activity {
     @InjectView(R.id.lvPic)
     LinearLayout lvPic;
     private TypedArray pictureLists;
-    public static ArrayList<Integer> imgResId=new ArrayList<>();
+    public static ArrayList<Integer> imgResId = new ArrayList<>();
 
 
     @Override
@@ -59,6 +65,8 @@ public class MainActivity extends Activity {
                 .permitAll().build();
         StrictMode.setThreadPolicy(policy);
         setContentView(R.layout.activity_main);
+        ButterKnife.inject(this);
+        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE | WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
         recList = (RecyclerView) findViewById(R.id.cardList);
         recList.setHasFixedSize(true);
         LinearLayoutManager llm = new LinearLayoutManager(this);
@@ -68,7 +76,6 @@ public class MainActivity extends Activity {
         userAdapter = new UserAdapter(createList(1));
         recList.setAdapter(userAdapter);
         recList.getItemAnimator().setSupportsChangeAnimations(true);
-        ButterKnife.inject(this);
 
         double density = getResources().getDisplayMetrics().density;
         pictureLists = getResources()
@@ -86,9 +93,9 @@ public class MainActivity extends Activity {
             imageButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    if (out != null && author!=null) {
+                    if (out != null && author != null) {
                         String message = etInput.getText().toString();
-                        message+="#img-"+imageButton.getTag()+"/#";
+                        message += "#img-" + imageButton.getTag() + "/#";
                         out.println(message);
                         etInput.selectAll();
                     }
@@ -96,9 +103,20 @@ public class MainActivity extends Activity {
             });
             lvPic.addView(imageButton);
         }
-
         pictureLists.recycle();
-
+        handler = new Handler() {
+            @Override
+            public void handleMessage(Message msg) {
+                Bundle bundle = msg.getData();
+                String strmsg = bundle.getString("msg");
+                if (UserInfo.getAuthor(strmsg).equals("server"))
+                    tvContent.setText(strmsg);
+                else
+                    tvContent.setText("");
+                userAdapter.addMessage(UserInfo.getTimeSystem(), strmsg);
+                recList.scrollToPosition(userAdapter.getItemCount() - 1);
+            }
+        };
         connectServer();
     }
 
@@ -113,41 +131,42 @@ public class MainActivity extends Activity {
     }
 
     private void connectServer() {
-        try {
-            // Connect to Chat Server
-            Socket socket = new Socket(SERVER_HOSTNAME, SERVER_PORT);
-            in = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
-            out = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), "UTF-8"), true);
-            Log("Connected to server " + SERVER_HOSTNAME + ":" + SERVER_PORT);
-        } catch (IOException ioe) {
-            ioe.printStackTrace();
-        }
-        handler = new Handler() {
-            @Override
-            public void handleMessage(Message msg) {
-                Bundle bundle = msg.getData();
-                String strmsg = bundle.getString("msg");
-                if (UserInfo.getAuthor(strmsg).equals("server"))
-                    tvContent.setText(strmsg);
-                else
-                    tvContent.setText("");
-                userAdapter.addMessage(UserInfo.getTimeSystem(), strmsg);
-                recList.scrollToPosition(userAdapter.getItemCount() - 1);
-            }
-        };
-        // Create and start Sender thread
-        Sender sender = new Sender(in, out, handler);
-        sender.setDaemon(true);
-        sender.start();
-        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE | WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
-
+        cn = new ConnectAsyncTask();
+        cn.execute();
     }
 
+    public void tryAgainPopup() {
+        new AlertDialog.Builder(this).setCancelable(false)
+                .setTitle("Error")
+                .setMessage("May be server is off, try it again!")
+                .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        connectServer();
+                    }
+                })
+                .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                })
+                .setIcon(android.R.drawable.ic_dialog_alert)
+                .show();
+    }
+
+    @OnClick(R.id.btHtml)
+    public void sendHtmlSample(){
+        if (out != null && author!=null) {
+            String message = "<h1>Hello</h1><i><small><font color=\"#c5c5c5\">\"Competitor ID: \"</font></small></i>\" + \"<font color=\"#47a842\">\" + compID + \"</font><p>this is a <em>sample </em><u>about </u><span style=\"color:#FF0000;\">showing </span><strong>html</strong><img src='cry_smile'/><img src='kiss'/><img src='lightbulb'/><img src='omg_smile'/><img src='thumbs_up'/><img src='about_smile'/></p><p><a href=\"http://google.com.vn\">Link<input name=\"a\" type=\"text\" value=\"d\" /></a></p>";
+            if (author == null) author = message;
+            out.println(message);
+            etInput.selectAll();
+        }
+    }
     @OnClick(R.id.btSend)
     public void sendMsg() {
         if (out != null) {
             String message = etInput.getText().toString();
-            if(author==null) author=message;
+            if (author == null) author = message;
             out.println(message);
             etInput.selectAll();
         }
@@ -155,6 +174,57 @@ public class MainActivity extends Activity {
 
     private void Log(String msg) {
         Log.e(TAG, msg);
+    }
+
+    public class ConnectAsyncTask extends AsyncTask<String, Integer, Boolean> {
+        ProgressDialog dialog = null;
+
+        @Override
+        protected void onPreExecute() {
+            dialog = ProgressDialog.show(MainActivity.this, "Connecting...", "Connect to server on port 2222", true, false);
+        }
+
+        @Override
+        protected void onPostExecute(Boolean result) {
+            cn = null;
+            if (dialog.isShowing()) {
+                dialog.dismiss();
+            }
+            if (result == false) {
+                tryAgainPopup();
+            }
+        }
+
+        @Override
+        protected Boolean doInBackground(String... strings) {
+            try {
+                // Connect to Chat Server
+                clientSocket = new Socket(SERVER_HOSTNAME, SERVER_PORT);
+                in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream(), "UTF-8"));
+                out = new PrintWriter(new OutputStreamWriter(clientSocket.getOutputStream(), "UTF-8"), true);
+                Log("Connected to server " + SERVER_HOSTNAME + ":" + SERVER_PORT);
+            } catch (IOException ioe) {
+                ioe.printStackTrace();
+            }
+            if (clientSocket != null && in != null && out != null) {
+                try {
+                    Sender sender = null;
+                    // Create and start Sender thread
+                    sender = new Sender(in, out, handler);
+                    sender.setDaemon(true);
+                    sender.start();
+                } catch (Exception e) {
+                    Log("Exception : " + e.toString());
+                }
+            } else {
+                Log("Sorry server off, try again!!!");
+                if (dialog.isShowing()) {
+                    dialog.dismiss();
+                }
+                return false;
+            }
+            return true;
+        }
     }
 }
 

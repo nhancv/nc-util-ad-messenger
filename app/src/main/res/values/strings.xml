@@ -6,6 +6,7 @@
 
     <array name="picture">
         <item >@drawable/test</item>
+        <item >@drawable/test1</item>
         <item >@drawable/test2</item>
         <item >@drawable/test3</item>
     </array>
